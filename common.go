@@ -37,6 +37,14 @@ func LogAndNotFound(w http.ResponseWriter, r *http.Request, err error) {
 		http.StatusNotFound)
 }
 
+// LogAndFailed logs the given error message and returns a failed
+// JSON error message as well as a 400.
+func LogAndFailed(w http.ResponseWriter, r *http.Request, err error) {
+	err = fmt.Errorf("failed: %s %s: %v", r.Method, r.URL, err)
+	LogAndMessage(w, r, err, "error", ErrMsgs["failed"],
+		http.StatusBadRequest)
+}
+
 // LogAndUnexpected logs the given error message and returns an
 // internal server error JSON error message as well as a 500.
 func LogAndUnexpected(w http.ResponseWriter, r *http.Request, err error) {
