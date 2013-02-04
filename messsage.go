@@ -20,7 +20,9 @@ func WriteJSON(w http.ResponseWriter, r *http.Request, data interface{}) {
 }
 
 // WriteMessage prints a standard JSON message to the given writer.
-func WriteMessage(w http.ResponseWriter, r *http.Request, mtype, message string, code int) {
+func WriteMessage(w http.ResponseWriter, r *http.Request,
+	mtype, message string, code int) {
+
 	// Make the JSON response.
 	m := Message{Type: mtype, Message: message}
 	b, err := json.Marshal(m)
@@ -34,7 +36,8 @@ func WriteMessage(w http.ResponseWriter, r *http.Request, mtype, message string,
 	WriteResponse(w, r, b)
 }
 
-// WriteSuccessMessage prints a JSON response of success to the given writer.
+// WriteSuccessMessage prints a JSON response of success to the given
+// writer.
 func WriteSuccessMessage(w http.ResponseWriter, r *http.Request) {
 	WriteMessage(w, r, "success", ErrMsgs["success"], http.StatusOK)
 }
@@ -65,10 +68,10 @@ func UnmarshalOrFail(w http.ResponseWriter, r *http.Request, bytes []byte,
 	return true
 }
 
-// GetBodyOrFail attempts to read the body from the given request. If it succeeds,
-// the body is returned as a string as well as true. If it fails, ""
-// and false are returned. The failure is also loged and generic error
-// is returned as the response.
+// GetBodyOrFail attempts to read the body from the given request. If
+// it succeeds, the body is returned as a string as well as true. If
+// it fails, "" and false are returned. The failure is also loged and
+// generic error is returned as the response.
 func GetBodyOrFail(w http.ResponseWriter, r *http.Request) ([]byte, bool) {
 	// Read the body for the JSON.
 	if r.Body == nil {

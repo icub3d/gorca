@@ -11,7 +11,9 @@ import (
 // returns it. The bool returns determines if the get was
 // successful. If not, a JSON "unexpected" message is sent as the
 // response. That case should terminate your response processing.
-func GetUserOrUnexpected(w http.ResponseWriter, r *http.Request) (*user.User, bool) {
+func GetUserOrUnexpected(w http.ResponseWriter,
+	r *http.Request) (*user.User, bool) {
+
 	cxt := appengine.NewContext(r)
 
 	// Get the current user.
@@ -30,7 +32,9 @@ func GetUserOrUnexpected(w http.ResponseWriter, r *http.Request) (*user.User, bo
 // and returns it. The bool returns determines if the get was
 // successful. If not, a JSON "unexpected" message is sent as the
 // response. That case should terminate your response processing.
-func GetUserLogoutURL(w http.ResponseWriter, r *http.Request, dest string) (string, bool) {
+func GetUserLogoutURL(w http.ResponseWriter, r *http.Request,
+	dest string) (string, bool) {
+
 	cxt := appengine.NewContext(r)
 
 	// Get their logout URL.
