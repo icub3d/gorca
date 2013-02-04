@@ -1,8 +1,20 @@
 // Package gorca contains common RESTful structures, methods, and
 // functions that are useful go appengine applications.
+//
+// If you are testing these functions, there are some steps you need
+// to do to setup a proper testing environment. 
+//
+//    export APPENGINE_SDK=/path/to/google_appengine
+//    cd $GOPATH/src
+//    ln -s $APPENGINE_SDK/goroot/src/pkg/appengine
+//    ln -s $APPENGINE_SDK/goroot/src/pkg/appengine_internal
+//    go get github.com/icub3d/appenginetesting
+//    cd github.com/icub3d/gorca
+//    go test ./...
 package gorca
 
 import (
+	"appengine"
 	"fmt"
 	"net/http"
 )
@@ -22,46 +34,53 @@ var ErrMsgs map[string]string = map[string]string{
 	"unauthorized": "You are not authorized to do that.",
 }
 
-// NotFoundFunc is a http.HandlerFunc that returns a standard 404 not
-// found as well as a JSON response with the error.
+// NotFoundFunc makes a http.HandlerFunc that returns a standard
+// 404 not found as well as a JSON response with the error.
 func NotFoundFunc(w http.ResponseWriter, r *http.Request) {
-	err := fmt.Errorf("request failed: %s %s", r.Method, r.URL.String())
-	LogAndNotFound(w, r, err)
+	c := appengine.NewContext(r)
+
+	LogAndNotFound(c, w, r, fmt.Errorf("not found func"))
 }
 
 // LogAndNotFound logs the given error message and returns a not found
 // JSON error message as well as a 404.
-func LogAndNotFound(w http.ResponseWriter, r *http.Request, err error) {
-	err = fmt.Errorf("not found: %s %s: %v", r.Method, r.URL, err)
-	LogAndMessage(w, r, err, "error", ErrMsgs["notfound"],
+func LogAndNotFound(c appengine.Context, w http.ResponseWriter,
+	r *http.Request, err error) {
+
+	err = fmt.Errorf("not found: %v", err)
+	LogAndMessage(c, w, r, err, "error", ErrMsgs["notfound"],
 		http.StatusNotFound)
 }
 
 // LogAndFailed logs the given error message and returns a failed
 // JSON error message as well as a 400.
-func LogAndFailed(w http.ResponseWriter, r *http.Request, err error) {
-	err = fmt.Errorf("failed: %s %s: %v", r.Method, r.URL, err)
-	LogAndMessage(w, r, err, "error", ErrMsgs["failed"],
+func LogAndFailed(c appengine.Context, w http.ResponseWriter,
+	r *http.Request, err error) {
+
+	err = fmt.Errorf("failed: %v", err)
+	LogAndMessage(c, w, r, err, "error", ErrMsgs["failed"],
 		http.StatusBadRequest)
 }
 
 // LogAndUnexpected logs the given error message and returns an
 // internal server error JSON error message as well as a 500.
-func LogAndUnexpected(w http.ResponseWriter, r *http.Request, err error) {
-	err = fmt.Errorf("unexpected: %s %s: %v", r.Method, r.URL, err)
-	LogAndMessage(w, r, err, "error", ErrMsgs["unexpexted"],
+func LogAndUnexpected(c appengine.Context, w http.ResponseWriter,
+	r *http.Request, err error) {
+
+	err = fmt.Errorf("unexpected: %v", err)
+	LogAndMessage(c, w, r, err, "error", ErrMsgs["unexpected"],
 		http.StatusInternalServerError)
 }
 
 // LogAndMessage logs the given error (if it is not nil) then sends
 // the given JSON message and status as the response.
-func LogAndMessage(w http.ResponseWriter, r *http.Request, err error,
-	mtype, message string, code int) {
+func LogAndMessage(c appengine.Context, w http.ResponseWriter,
+	r *http.Request, err error, mtype, message string, code int) {
 
 	if err != nil {
-		Log(r, "error", err.Error())
+		Log(c, r, "error", err.Error())
 	}
-	Log(r, "info", "sent response (%s): %s", mtype, message)
+	Log(c, r, "info", "sent response (%s): %s", mtype, message)
 
-	WriteMessage(w, r, mtype, message, code)
+	WriteMessage(c, w, r, mtype, message, code)
 }

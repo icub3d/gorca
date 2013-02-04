@@ -9,12 +9,11 @@ import (
 // Log is a helper function that logs the given message to appenging
 // with the given priority. Accepted priorities are "debug", "info",
 // "warn", "error", and "crit". Other values default to "error".
-func Log(r *http.Request, priority string, message string,
+func Log(c appengine.Context, r *http.Request, priority string, message string,
 	params ...interface{}) {
-	// Get the context for logging.
-	c := appengine.NewContext(r)
 
-	message = fmt.Sprintf("[%s] %s: %s", r.RemoteAddr, r.URL, message)
+	message = fmt.Sprintf("[%s] [%s] [%s]: %s", r.RemoteAddr, r.Method,
+		r.URL, message)
 
 	switch priority {
 	case "debug":

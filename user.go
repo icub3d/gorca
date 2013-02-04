@@ -11,13 +11,13 @@ import (
 // returns it. The bool returns determines if the get was
 // successful. If not, a JSON "unexpected" message is sent as the
 // response. That case should terminate your response processing.
-func GetUserOrUnexpected(w http.ResponseWriter, r *http.Request) (*user.User, bool) {
-	cxt := appengine.NewContext(r)
+func GetUserOrUnexpected(c appengine.Context, w http.ResponseWriter,
+	r *http.Request) (*user.User, bool) {
 
 	// Get the current user.
-	u := user.Current(cxt)
+	u := user.Current(c)
 	if u == nil {
-		LogAndUnexpected(w, r,
+		LogAndUnexpected(c, w, r,
 			fmt.Errorf("no user found, but auth is required."))
 		return nil, false
 	}
@@ -30,13 +30,13 @@ func GetUserOrUnexpected(w http.ResponseWriter, r *http.Request) (*user.User, bo
 // and returns it. The bool returns determines if the get was
 // successful. If not, a JSON "unexpected" message is sent as the
 // response. That case should terminate your response processing.
-func GetUserLogoutURL(w http.ResponseWriter, r *http.Request, dest string) (string, bool) {
-	cxt := appengine.NewContext(r)
+func GetUserLogoutURL(c appengine.Context, w http.ResponseWriter,
+	r *http.Request, dest string) (string, bool) {
 
 	// Get their logout URL.
-	logout, err := user.LogoutURL(cxt, dest)
+	logout, err := user.LogoutURL(c, dest)
 	if err != nil {
-		LogAndUnexpected(w, r, fmt.Errorf("calling LogoutURL: %s", err))
+		LogAndUnexpected(c, w, r, fmt.Errorf("calling LogoutURL: %s", err))
 		return "", false
 	}
 
