@@ -44,6 +44,23 @@ func TestGetUserOrUnexpected(t *testing.T) {
 	_, ok = GetUserOrUnexpected(c, w, r)
 	if ok {
 		t.Errorf("expected !ok for logged out user, but got: ok")
+	} else {
+		// Make sure we got the right value.
+		ecode := http.StatusInternalServerError
+		ebody := `{"Type":"error","Message":"Something unexpected happened."}`
+
+		// Check the status
+		if w.Code != ecode {
+			t.Errorf("expexted %v as response code. Got: %v",
+				ecode, w.Code)
+		}
+
+		body := w.Body.String()
+		if body != ebody {
+			t.Errorf("expexted %v as response body. Got: %v",
+				ebody, body)
+		}
+
 	}
 }
 
