@@ -97,7 +97,7 @@ func GetBodyOrFail(c appengine.Context, w http.ResponseWriter,
 	return body, true
 }
 
-// UnmarshalFromBodyOrFail attempts to read the body from the give
+// UnmarshalFromBodyOrFail attempts to read the body from the given
 // request and umarshal it as JSON into the given interface. If an
 // error occurs, the failure is logged and a generic message is
 // returned as the response. The boolean value returned signifies the
