@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"fmt"
 	"github.com/icub3d/appenginetesting"
+	"github.com/icub3d/testhelper"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +14,9 @@ type LogAndFunc func(c appengine.Context, w http.ResponseWriter,
 	r *http.Request, err error)
 
 func TestLogAnds(t *testing.T) {
+	h := testhelper.New(t)
 
+	// These are our test cases.
 	tests := []struct {
 		f      LogAndFunc
 		method string
@@ -55,37 +58,28 @@ func TestLogAnds(t *testing.T) {
 
 	// We are going to reuse the context.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating contxt", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
+
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest(test.method, test.url, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		h.FatalNotNil("creating request", err)
 
 		// Call the test function
 		test.f(c, w, r, test.err)
 
-		// Check the status
-		if w.Code != test.ecode {
-			t.Errorf("(%v) expexted %v as response code. Got: %v",
-				i, test.ecode, w.Code)
-		}
-
-		body := w.Body.String()
-		if body != test.ebody {
-			t.Errorf("(%v) expexted %v as response body. Got: %v",
-				i, test.ebody, body)
-		}
+		// Check the values.
+		h.ErrorNotEqual("response code", w.Code, test.ecode)
+		h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 	}
 }
 
 func TestLogAndMessage(t *testing.T) {
+	h := testhelper.New(t)
 
 	tests := []struct {
 		method string
@@ -110,32 +104,22 @@ func TestLogAndMessage(t *testing.T) {
 
 	// We are going to reuse the context.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
+
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest(test.method, test.url, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		h.FatalNotNil("creating request", err)
 
 		// Call the test function
 		LogAndMessage(c, w, r, test.err, test.mtype, test.msg, test.ecode)
 
-		// Check the status
-		if w.Code != test.ecode {
-			t.Errorf("(%v) expexted %v as response code. Got: %v",
-				i, test.ecode, w.Code)
-		}
-
-		body := w.Body.String()
-		if body != test.ebody {
-			t.Errorf("(%v) expexted %v as response body. Got: %v",
-				i, test.ebody, body)
-		}
+		// Check the values.
+		h.ErrorNotEqual("response code", w.Code, test.ecode)
+		h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 	}
 }

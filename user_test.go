@@ -2,6 +2,7 @@ package gorca
 
 import (
 	"github.com/icub3d/appenginetesting"
+	"github.com/icub3d/testhelper"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,79 +10,100 @@ import (
 )
 
 func TestGetUserOrUnexpected(t *testing.T) {
+	h := testhelper.New(t)
+
+	// We are going to reuse the context here.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
-	// Test loggin in.
-	c.Login("test@example.com", true)
+	tests := []struct {
+		f       func()
+		success bool
+		email   string
+		admin   bool
+		ecode   int
+		ebody   string
+	}{
+		// Test login for an admin user.
+		{
+			f: func() {
+				c.Login("test@example.com", true)
+			},
+			success: true,
+			email:   "test@example.com",
+			admin:   true,
+			ecode:   0,
+			ebody:   "",
+		},
 
-	// Make the request and writer.
-	w := httptest.NewRecorder()
-	r, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatal(err)
+		// Test login for a non admin user.
+		{
+			f: func() {
+				c.Logout()
+				c.Login("test@example.com", false)
+			},
+			success: true,
+			email:   "test@example.com",
+			admin:   false,
+			ecode:   0,
+			ebody:   "",
+		},
+
+		// Test being logged out.
+		{
+			f: func() {
+				c.Logout()
+			},
+			success: false,
+			email:   "",
+			admin:   false,
+			ecode:   http.StatusInternalServerError,
+			ebody:   `{"Type":"error","Message":"Something unexpected happened."}`,
+		},
 	}
 
-	u, ok := GetUserOrUnexpected(c, w, r)
-	if !ok {
-		t.Fatal("getting user")
-	}
+	for i, test := range tests {
+		h.SetIndex(i)
 
-	e := "test@example.com"
-	if u.Email != e {
-		t.Errorf("expected '%v' for email, but got: %v", e, u.Email)
-	}
+		// Prep the test.
+		test.f()
 
-	if !u.Admin {
-		t.Errorf("expected '' for email, but got: %v", true, u.Admin)
-	}
+		// Make the request and writer.
+		w := httptest.NewRecorder()
+		r, err := http.NewRequest("GET", "/", nil)
+		h.FatalNotNil("creating request", err)
 
-	// Now see what happens when we log out.
-	c.Logout()
-	_, ok = GetUserOrUnexpected(c, w, r)
-	if ok {
-		t.Errorf("expected !ok for logged out user, but got: ok")
-	} else {
-		// Make sure we got the right value.
-		ecode := http.StatusInternalServerError
-		ebody := `{"Type":"error","Message":"Something unexpected happened."}`
+		// Call the normal function
+		u, ok := GetUserOrUnexpected(c, w, r)
+		h.FatalNotEqual("success", ok, test.success)
 
-		// Check the status
-		if w.Code != ecode {
-			t.Errorf("expexted %v as response code. Got: %v",
-				ecode, w.Code)
+		if test.success {
+			// Check the user credentials
+			h.ErrorNotEqual("email", u.Email, test.email)
+			h.ErrorNotEqual("admin", u.Admin, test.admin)
+		} else {
+			// Check the values.
+			h.ErrorNotEqual("response code", w.Code, test.ecode)
+			h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 		}
-
-		body := w.Body.String()
-		if body != ebody {
-			t.Errorf("expexted %v as response body. Got: %v",
-				ebody, body)
-		}
-
 	}
 }
 
 func TestGetUserLogoutURL(t *testing.T) {
+	h := testhelper.New(t)
+
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	// Make the request and writer.
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating request", err)
 
 	url, ok := GetUserLogoutURL(c, w, r, "/")
-	if !ok {
-		t.Fatal("getting url")
-	}
+	h.FatalNotEqual("getting url", ok, true)
 
 	surl := "/_ah/login?continue=http%3A//127.0.0.1%3A"
 	eurl := "/&action=Logout"

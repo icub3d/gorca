@@ -3,6 +3,7 @@ package gorca
 import (
 	"fmt"
 	"github.com/icub3d/appenginetesting"
+	"github.com/icub3d/testhelper"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,8 @@ import (
 )
 
 func TestWriteJSON(t *testing.T) {
+	h := testhelper.New(t)
+
 	tests := []struct {
 		data     interface{}
 		code     int
@@ -41,36 +44,23 @@ func TestWriteJSON(t *testing.T) {
 
 	// We can use the same context for all tests.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
 
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest("GET", "/", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		h.FatalNotNil("creating request", err)
 
 		WriteJSON(c, w, r, test.data)
 
-		// Check the status
-		if w.Code != test.code {
-			t.Errorf("(%v) expexted %v as response code. Got: %v",
-				i, test.code, w.Code)
-		}
-
-		body := w.Body.String()
-		if body != test.response {
-			t.Errorf("(%v) expexted %v as response body. Got: %v",
-				i, test.response, body)
-		}
-
+		// Check the values.
+		h.ErrorNotEqual("response code", w.Code, test.code)
+		h.ErrorNotEqual("response body", w.Body.String(), test.response)
 	}
-
 }
 
 func TestWriteMessage(t *testing.T) {
@@ -78,6 +68,7 @@ func TestWriteMessage(t *testing.T) {
 }
 
 func TestWriteSuccessMessage(t *testing.T) {
+	h := testhelper.New(t)
 
 	tests := []struct {
 		ecode int
@@ -92,37 +83,28 @@ func TestWriteSuccessMessage(t *testing.T) {
 
 	// We are going to reuse the context.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
+
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest("GET", "/", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		h.FatalNotNil("creating request", err)
 
 		// Call the test function
 		WriteSuccessMessage(c, w, r)
 
-		// Check the status
-		if w.Code != test.ecode {
-			t.Errorf("(%v) expexted %v as response code. Got: %v",
-				i, test.ecode, w.Code)
-		}
-
-		body := w.Body.String()
-		if body != test.ebody {
-			t.Errorf("(%v) expexted %v as response body. Got: %v",
-				i, test.ebody, body)
-		}
+		// Check the values.
+		h.ErrorNotEqual("response code", w.Code, test.ecode)
+		h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 	}
 }
 
 func TestWriteResponse(t *testing.T) {
+	h := testhelper.New(t)
 
 	tests := []struct {
 		ecode int
@@ -139,37 +121,28 @@ func TestWriteResponse(t *testing.T) {
 
 	// We are going to reuse the context.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
+
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest("GET", "/", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		h.FatalNotNil("creating request", err)
 
 		// Call the test function
 		WriteResponse(c, w, r, []byte(test.body))
 
-		// Check the status
-		if w.Code != test.ecode {
-			t.Errorf("(%v) expexted %v as response code. Got: %v",
-				i, test.ecode, w.Code)
-		}
-
-		body := w.Body.String()
-		if body != test.ebody {
-			t.Errorf("(%v) expexted %v as response body. Got: %v",
-				i, test.ebody, body)
-		}
+		// Check the values.
+		h.ErrorNotEqual("response code", w.Code, test.ecode)
+		h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 	}
 }
 
 func TestUnmarshalOrFail(t *testing.T) {
+	h := testhelper.New(t)
 
 	tests := []struct {
 		result bool
@@ -199,47 +172,35 @@ func TestUnmarshalOrFail(t *testing.T) {
 
 	// We are going to reuse the context.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
+
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest("GET", "/", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		h.FatalNotNil("creating request", err)
 
 		// Call the test function
 		results := UnmarshalOrFail(c, w, r, test.bytes, test.where)
 
-		if results != test.result {
-			t.Fatalf("(%v) expexted %v as result. Got: %v",
-				i, test.result, results)
-		}
+		h.FatalNotEqual("umarshal results", results, test.result)
 
 		// We don't get anything back on the wire if it succeeded.
 		if test.result == true {
 			continue
 		}
 
-		// Check the status
-		if w.Code != test.ecode {
-			t.Errorf("(%v) expexted %v as response code. Got: %v",
-				i, test.ecode, w.Code)
-		}
-
-		body := w.Body.String()
-		if body != test.ebody {
-			t.Errorf("(%v) expexted %v as response body. Got: %v",
-				i, test.ebody, body)
-		}
+		// Check the values.
+		h.ErrorNotEqual("response code", w.Code, test.ecode)
+		h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 	}
 }
 
 func TestGetBodyOrFail(t *testing.T) {
+	h := testhelper.New(t)
 
 	tests := []struct {
 		body    string
@@ -278,47 +239,34 @@ func TestGetBodyOrFail(t *testing.T) {
 
 	// We are going to reuse the context.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
+
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 
 		// Call the test function
 		body, results := GetBodyOrFail(c, w, test.request)
 
-		if results != test.result {
-			t.Fatalf("(%v) expexted %v as result. Got: %v",
-				i, test.result, results)
-		}
+		h.FatalNotEqual("umarshal results", results, test.result)
 
 		// If we failed, we should test the wire.
 		if test.result == false {
-			// Check the status
-			if w.Code != test.ecode {
-				t.Errorf("(%v) expexted %v as response code. Got: %v",
-					i, test.ecode, w.Code)
-			}
-
-			body := w.Body.String()
-			if body != test.ebody {
-				t.Errorf("(%v) expexted %v as response body. Got: %v",
-					i, test.ebody, body)
-			}
+			// Check the values.
+			h.ErrorNotEqual("response code", w.Code, test.ecode)
+			h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 		} else {
 			// We should test the body.
-			if string(body) != test.body {
-				t.Errorf("(%v) expexted %v as response body. Got: %v",
-					i, test.body, body)
-			}
+			h.ErrorNotEqual("body", string(body), test.body)
 		}
 	}
 }
 
 func TestUnmarshalFromBodyOrFail(t *testing.T) {
+	h := testhelper.New(t)
 
 	tests := []struct {
 		body    string
@@ -367,36 +315,25 @@ func TestUnmarshalFromBodyOrFail(t *testing.T) {
 
 	// We are going to reuse the context.
 	c, err := appenginetesting.NewContext(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h.FatalNotNil("creating context", err)
 	defer c.Close()
 
 	for i, test := range tests {
+		h.SetIndex(i)
+
 		// Make the request and writer.
 		w := httptest.NewRecorder()
 
 		// Call the test function
 		results := UnmarshalFromBodyOrFail(c, w, test.request, test.where)
 
-		if results != test.result {
-			t.Fatalf("(%v) expexted %v as result. Got: %v",
-				i, test.result, results)
-		}
+		h.FatalNotEqual("umarshal results", results, test.result)
 
 		// If we failed, we should test the wire.
 		if test.result == false {
-			// Check the status
-			if w.Code != test.ecode {
-				t.Errorf("(%v) expexted %v as response code. Got: %v",
-					i, test.ecode, w.Code)
-			}
-
-			body := w.Body.String()
-			if body != test.ebody {
-				t.Errorf("(%v) expexted %v as response body. Got: %v",
-					i, test.ebody, body)
-			}
+			// Check the values.
+			h.ErrorNotEqual("response code", w.Code, test.ecode)
+			h.ErrorNotEqual("response body", w.Body.String(), test.ebody)
 		}
 	}
 }
