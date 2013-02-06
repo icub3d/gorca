@@ -63,28 +63,28 @@ func TestPutStringKeys(t *testing.T) {
 
 		// A normal list.
 		{
-			keys:   []string{makeKey(c).Encode(), makeKey(c).Encode()},
+			keys:   []string{makeKey(c, nil).Encode(), makeKey(c, nil).Encode()},
 			values: []stringer{stringer{"one"}, stringer{"two"}},
 			expect: true,
 		},
 
 		// More keys than values.
 		{
-			keys:   []string{makeKey(c).Encode(), makeKey(c).Encode()},
+			keys:   []string{makeKey(c, nil).Encode(), makeKey(c, nil).Encode()},
 			values: []stringer{stringer{"one"}},
 			expect: false,
 		},
 
 		// More values than keys.
 		{
-			keys:   []string{makeKey(c).Encode(), makeKey(c).Encode()},
+			keys:   []string{makeKey(c, nil).Encode(), makeKey(c, nil).Encode()},
 			values: []stringer{stringer{"one"}, stringer{"two"}, stringer{"three"}},
 			expect: false,
 		},
 
 		// Invalid key.
 		{
-			keys:   []string{makeKey(c).Encode(), makeKey(c).Encode(), "hahaha"},
+			keys:   []string{makeKey(c, nil).Encode(), makeKey(c, nil).Encode(), "hahaha"},
 			values: []stringer{stringer{"one"}, stringer{"two"}, stringer{"three"}},
 			expect: false,
 		},
@@ -144,12 +144,12 @@ func TestDeleteStringKeys(t *testing.T) {
 		// A normal list.
 		{
 			keys: []string{
-				makeKey(c).Encode(),
-				makeKey(c).Encode(),
-				makeKey(c).Encode(),
-				makeKey(c).Encode(),
-				makeKey(c).Encode(),
-				makeKey(c).Encode(),
+				makeKey(c, nil).Encode(),
+				makeKey(c, nil).Encode(),
+				makeKey(c, nil).Encode(),
+				makeKey(c, nil).Encode(),
+				makeKey(c, nil).Encode(),
+				makeKey(c, nil).Encode(),
 			},
 			values: []stringer{
 				stringer{"one"},
@@ -202,7 +202,46 @@ func TestDeleteStringKeys(t *testing.T) {
 	}
 }
 
-func makeKey(c appengine.Context) *datastore.Key {
-	id, _, _ := datastore.AllocateIDs(c, "Item", nil, 1)
-	return datastore.NewKey(c, "Item", "", id, nil)
+func TestDeleteStringKeyAndAncestors(t *testing.T) {
+	// This also tests DeleteKeys.
+
+	h := testhelper.New(t)
+
+	// We are going to reuse the context.
+	c, err := appenginetesting.NewContext(nil)
+	h.FatalNotNil("creating contxt", err)
+	defer c.Close()
+
+	// Make the request and writer.
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", "/datastore", nil)
+	h.FatalNotNil("creating request", err)
+
+	// Make the parent
+	parent := makeKey(c, nil)
+	ok := PutStringKeys(c, w, r, []string{parent.Encode()}, []stringer{stringer{"parent"}})
+	h.FatalNotEqual("put parent", ok, true)
+
+	// Make the child
+	child := makeKey(c, parent)
+	ok = PutStringKeys(c, w, r, []string{child.Encode()}, []stringer{stringer{"child"}})
+	h.FatalNotEqual("put child", ok, true)
+
+	// Call the delete
+	ok = DeleteStringKeyAndAncestors(c, w, r, "Item", parent.Encode())
+	h.FatalNotEqual("delete ancestors", ok, true)
+
+	// Check the parent
+	var value stringer
+	err = datastore.Get(c, parent, &value)
+	h.ErrorNil("deleted parent", err)
+
+	// Check the child
+	err = datastore.Get(c, child, &value)
+	h.ErrorNil("deleted child", err)
+}
+
+func makeKey(c appengine.Context, parent *datastore.Key) *datastore.Key {
+	id, _, _ := datastore.AllocateIDs(c, "Item", parent, 1)
+	return datastore.NewKey(c, "Item", "", id, parent)
 }
