@@ -1,3 +1,7 @@
+// Copyright 2013 Joshua Marsh. All rights reserved.  Use of this
+// source code is governed by a BSD-style license that can be found in
+// the LICENSE file.
+
 package gorca
 
 import (
@@ -9,8 +13,8 @@ import (
 // Log is a helper function that logs the given message to appenging
 // with the given priority. Accepted priorities are "debug", "info",
 // "warn", "error", and "crit". Other values default to "error".
-func Log(c appengine.Context, r *http.Request, priority string, message string,
-	params ...interface{}) {
+func Log(c appengine.Context, r *http.Request, priority string,
+	message string, params ...interface{}) {
 
 	message = fmt.Sprintf("[%s] [%s] [%s]: %s", r.RemoteAddr, r.Method,
 		r.URL, message)

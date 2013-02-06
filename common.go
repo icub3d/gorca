@@ -1,3 +1,7 @@
+// Copyright 2013 Joshua Marsh. All rights reserved.  Use of this
+// source code is governed by a BSD-style license that can be found in
+// the LICENSE file.
+
 // Package gorca contains common RESTful structures, methods, and
 // functions that are useful go appengine applications.
 //
