@@ -23,6 +23,7 @@ func TestLogAnds(t *testing.T) {
 	// These are our test cases.
 	tests := []struct {
 		f      LogAndFunc
+		fn     string
 		method string
 		url    string
 		err    error
@@ -32,6 +33,7 @@ func TestLogAnds(t *testing.T) {
 		// LogAndNotFound
 		{
 			f:      LogAndNotFound,
+			fn:     "LogAndNotFound",
 			method: "GET",
 			url:    "/",
 			err:    fmt.Errorf("no such file or directory"),
@@ -42,6 +44,7 @@ func TestLogAnds(t *testing.T) {
 		// LogAndFailed
 		{
 			f:      LogAndFailed,
+			fn:     "LogAndFailed",
 			method: "GET",
 			url:    "/",
 			err:    fmt.Errorf("oopsie, you failed"),
@@ -52,6 +55,7 @@ func TestLogAnds(t *testing.T) {
 		// LogAndUnexpected
 		{
 			f:      LogAndUnexpected,
+			fn:     "LogAndUnexpected",
 			method: "GET",
 			url:    "/",
 			err:    fmt.Errorf("oopsie, i failed"),
@@ -72,6 +76,8 @@ func TestLogAnds(t *testing.T) {
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest(test.method, test.url, nil)
 		h.FatalNotNil("creating request", err)
+
+		h.SetFunc(`%s(c, w, r, err("%v"))`, test.fn, test.err)
 
 		// Call the test function
 		test.f(c, w, r, test.err)
@@ -118,6 +124,9 @@ func TestLogAndMessage(t *testing.T) {
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest(test.method, test.url, nil)
 		h.FatalNotNil("creating request", err)
+
+		h.SetFunc(`LogAndMessage(c, w, r, err("%v"), "%s, "%s", %d)`,
+			test.err, test.mtype, test.msg, test.ecode)
 
 		// Call the test function
 		LogAndMessage(c, w, r, test.err, test.mtype, test.msg, test.ecode)

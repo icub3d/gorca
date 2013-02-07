@@ -138,6 +138,7 @@ func TestWriteResponse(t *testing.T) {
 
 		// Call the test function
 		WriteResponse(c, w, r, []byte(test.body))
+		h.SetFunc("WriteResponse(c, w, r, []byte(test.body))")
 
 		// Check the values.
 		h.ErrorNotEqual("response code", w.Code, test.ecode)
@@ -189,6 +190,8 @@ func TestUnmarshalOrFail(t *testing.T) {
 
 		// Call the test function
 		results := UnmarshalOrFail(c, w, r, test.bytes, test.where)
+
+		h.SetFunc("UnmarshalOrFail(c, w, r, test.bytes, test.where)")
 
 		h.FatalNotEqual("umarshal results", results, test.result)
 
@@ -254,6 +257,8 @@ func TestGetBodyOrFail(t *testing.T) {
 
 		// Call the test function
 		body, results := GetBodyOrFail(c, w, test.request)
+
+		h.SetFunc("GetBodyOrFail(c, w, test.request)")
 
 		h.FatalNotEqual("umarshal results", results, test.result)
 
@@ -330,6 +335,8 @@ func TestUnmarshalFromBodyOrFail(t *testing.T) {
 
 		// Call the test function
 		results := UnmarshalFromBodyOrFail(c, w, test.request, test.where)
+
+		h.SetFunc("UnmarshalFromBodyOrFail(c, w, test.request, test.where)")
 
 		h.FatalNotEqual("umarshal results", results, test.result)
 
