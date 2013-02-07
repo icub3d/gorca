@@ -183,6 +183,8 @@ func TestDeleteStringKeys(t *testing.T) {
 			}
 		}
 
+		h.SetFunc("DeleteStringKeys(c, w, r, %v)", dkeys)
+
 		// delete the items
 		ok = DeleteStringKeys(c, w, r, dkeys)
 

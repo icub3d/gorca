@@ -34,3 +34,4 @@ tramp
 # Org-mode
 .org-id-locations
 *_archive
+command-line-arguments.test
