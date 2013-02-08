@@ -23,6 +23,7 @@ func WriteJSON(c appengine.Context, w http.ResponseWriter,
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/json; charset=utf-8")
 	WriteResponse(c, w, r, b)
 }
 
@@ -39,6 +40,7 @@ func WriteMessage(c appengine.Context, w http.ResponseWriter,
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/json; charset=utf-8")
 	w.WriteHeader(code)
 	WriteResponse(c, w, r, b)
 }
