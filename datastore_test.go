@@ -29,7 +29,7 @@ func TestNewKey(t *testing.T) {
 
 	skey, key, ok := NewKey(c, w, r, "Item", nil)
 
-	h.ErrorNotEqual("new key", ok, true)
+	h.FatalNotEqual("new key", ok, true)
 	h.ErrorNotEqual("keys", skey, key.Encode())
 }
 
